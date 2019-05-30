@@ -9,8 +9,8 @@ let relativePosY
 let squareSize
 let boardWidth
 //Test values
-let rows
-let columns
+let rows = 8
+let columns = 8
 let squareCount
 // let squareIdList = []//idList format [[x,y,range],[x,y,range]] 
 let squareIdList = []
@@ -20,9 +20,8 @@ let turn = "red"
 let turnsTaken = 0
 let squareSelection
 let boardFloor
-let rowHeights = {
-
-}
+let rowHeights = {}
+let defaultSize = true
 
 function setRowHeights(){
     for (let x = 0; x < columns; x++){
@@ -519,12 +518,16 @@ function checkWin(){
 
 function buildBoard(){
 //Clear Previous settings
+    setCanvas()
     clearGameBoard()
     squareIdList = []
-
-    let gridSize = parseInt(document.getElementById("setSquareCount").value)
-    columns = gridSize
+    if (defaultSize){
+    }else{
+        let gridSize = parseInt(document.getElementById("setSquareCount").value)
+        columns = gridSize
     rows = gridSize
+    }
+    
 
     setBoardFloor()
     setBoardWidth();
@@ -532,6 +535,7 @@ function buildBoard(){
     setRowHeights()
     makeBoard();
     drawGrid();
+    defaultSize = false
 }
 
 function clearGameBoard(){
@@ -539,6 +543,10 @@ function clearGameBoard(){
     ctx.clearRect(0,0,canvas.width,canvas.height)
 }
 
+function setDefaultSize(){
+    columns = 8
+    rows = 8
+}
 function setBoardFloor(){
     boardFloor = rows-1
 }
