@@ -1,80 +1,121 @@
 <!DOCTYPE HTML>
 
 <head>
+    <!-- Style -->
 <link rel="stylesheet" type="text/css" href="c4.css">
-    
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
 <script src="c4.js" type="text/javascript"></script>
 </head>
 <body>
-<a href="https://brazill91.github.io/brazil.github.io/">    <button class="btn btn-default">Back</button>
-    </a>
-    
-    <div id="center-container">
-    <canvas id="canvas1" style="border:1px solid rgb(0,0,0)" onmousemove="setMouseCoords();displayPos()">
-        <script>
-        let canvas1 = document.getElementById("canvas1");
-        canvas1.height = 400;
-        canvas1.width = 400
-        window.addEventListener("click",function(){
-            handleClick()
-        },null)
-        </script>
-        
-    </canvas>
-<script>
-    </script>
-<div class="output-container">
-    <div>Container Position</div>
-        <div class="coord-container">
-        <div>X:</div>
-        <div id="container-x-pos">...</div>
-        <div>Y:</div>
-        <div id="container-y-pos">...</div>
-        </div>
 
-    <div>Relative Position</div>
-        <div class="coord-container">
-        <div>X: </div>
-        <div id="relative-x-pos">...</div>
-        <div>Y: </div>
-        <div id="relative-y-pos">...</div>
-    </div> 
-</div>
-        <br/>
-<div class="output-container">
-    <div>Click Position </div>
-        <div class="coord-container">
-        <div>X: </div>
-        <div id="clickX">...</div>
-        <div>Y: </div>
-        <div id="clickY">...</div>
+<div class="container d-flex justify-content-center mb-3 mt-2">
+    <div class="row">
+        <div class="col">
+            <button class="btn btn-success" onclick="buildBoard()">Set Game Board</button>
+
         </div>
+    </div>
 </div>
-<div class="output-container">
-    <div>Canvas Box </div>
-        <div class="coord-container">
-        <div>Top: </div>
-        <div id="canvas-top">...</div>
-        <div>Bottom: </div>
-        <div id="canvas-bottom">...</div>
-        <div>Right: </div>
-        <div id="canvas-right">...</div>
-        <div>Left: </div>
-        <div id="canvas-left">...</div>
-        <div>Count: </div>
-        <div id="interval-count">...</div>
-        <div>Image Data: </div>
-        <div id="img-data">...</div>
+   
+<div class="container mb-5 d-flex justify-content-center">
+    <div class="row">
+        <div class="col">
+            Choose Square Count
+        <input id="setSquareCount">
+        </input>
         </div>
+    </div>
 </div>
+
+
+
+<div class="container d-flex justify-content-center">
+    <div class="row">
+        <div class="col">
+            <div id="center-container">
+                <canvas id="canvas1" style="border:1px solid rgb(0,0,0)" onmousemove="setMouseCoords();displayPos()">
+                    <script>
+                    let canvas1 = document.getElementById("canvas1");
+                    canvas1.height = 400;
+                    canvas1.width = 400
+                    window.addEventListener("click",function(){
+                        handleClick()
+                    },null)
+                    </script>
+                    
+                </canvas>
+                </div>
+        </div>
+    </div>
+</div>
+
+    
+<div class="container-fluid bg-dark mb-5 d-flex justify-content-center" style="color:white">
+        <div class="row">
+            <div class="col-12 text-center label">Diagnostics</div>
+
+                        <div class="col-3">
+                            <div class="label">Square Played: </div>
+                                <div class="">
+                                <div>X: </div>
+                                <div id="squareX">...</div>
+                                <div>Y: </div>
+                                <div id="squareY">...</div>
+                                </div>
+                        </div>
+                        
+                        <div class="col-3">
+                            <div class="label">Absolute Position</div>
+                                <div class="">
+                                <div>X:</div>
+                                <div id="container-x-pos">...</div>
+                                <div>Y:</div>
+                                <div id="container-y-pos">...</div>
+                                </div>
+                        
+                            <div class="col-3 label">Relative Position</div>
+                                <div class="">
+                                <div>X: </div>
+                                <div id="relative-x-pos">...</div>
+                                <div>Y: </div>
+                                <div id="relative-y-pos">...</div>
+                            </div> 
+                        </div>
+                                <br/>
+                        <div class="col-3">
+                            <div class="label">Click Position </div>
+                                <div class=" ">
+                                <div>X: </div>
+                                <div id="clickX">...</div>
+                                <div>Y: </div>
+                                <div id="clickY">...</div>
+                                </div>
+                        </div>
+                        <!-- <div class="col-12">
+                            <div class="container text-center label">Canvas Box
+                                <div class="row">
+                                    <div class="col-6">Top: </div>
+                                    <div class="col-6" id="canvas-top">...</div>
+                                    <div class="col-6">Bottom: </div>
+                                    <div class="col-6" id="canvas-bottom">...</div>
+                                    <div class="col-6">Right: </div>
+                                    <div class="col-6" id="canvas-right">...</div>
+                                    <div class="col-6">Left: </div>
+                                    <div class="col-6" id="canvas-left">...</div>
+                                </div>
+                            </div>
+                        </div>              -->
+
+        </div>
+    </div>
+
+
 
 </body>
 <script>
     showCanvasCoords();
-    setBoardWidth();
-    setSquareSize();
-    makeBoard();
-    drawGrid();
+
 </script>
 
 
