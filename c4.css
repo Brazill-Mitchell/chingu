@@ -1,3 +1,28 @@
 .label{
     font-size: 24px
 }
+#const-notice-container{
+    position: absolute;
+    top: 25%;
+    transform: translateY(-50%);
+    right: 10%;
+    border: 2px solid;
+    animation-name: border-pulse;
+    animation-duration: 2s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+@keyframes border-pulse{
+    0%{
+        border-color: rgba(255,160,0,1);
+    }
+    50%{
+        border-color: rgba(255,160,0,0);
+    }
+    100%{
+        border-color: rgba(255,160,0,1);
+    }
+}
+#const-notice{
+    margin: 20px 20px 20px 20px;
+}
