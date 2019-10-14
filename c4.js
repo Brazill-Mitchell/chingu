@@ -215,6 +215,7 @@ function getSquareRange(id){
 /*--Assign a value to the space that was set--
 Identifies the actual space on the canvas that was clicked,
 then matches that space with the relevant item in the squareIdList.
+Stops if selected column is full
 */
 function clickSquare(){
     let square = []
@@ -224,23 +225,30 @@ function clickSquare(){
         */
         if (relativePosX > squareIdList[x].startX && relativePosX < squareIdList[x].endX && relativePosY > squareIdList[x].startY && relativePosY < squareIdList[x].endY){
                 clickedSquare = squareIdList[x]
-                square = squareIdList[shiftSquareIndex(clickedSquare)]
-                square.floor = columnHeights[square.x]
-                squareSelection = square
-                console.log("Clicked Index: " + x)
-                console.log("Clicked Y: " + clickedSquare.y)
-                console.log("Index: " + squareSelection.index)
-                // console.log("Row: " + squareSelection.x)
-                console.log("Square Floor: " + squareSelection.floor)
-                console.log("Column Height: " + columnHeights[square.x])
-            return
-        }else{
+
+                if(columnHeights[clickedSquare.x] > -1){
+                    square = findFloor(clickedSquare)
+                    square.floor = columnHeights[square.x]
+                    squareSelection = square
+                    console.log("Clicked Index: " + x)
+                    console.log("Clicked Y: " + clickedSquare.y)
+                    console.log("Index: " + squareSelection.index)
+                    // console.log("Row: " + squareSelection.x)
+                    console.log("Square Floor: " + squareSelection.floor)
+                    console.log("Column Height: " + columnHeights[square.x])
+                    console.log('------------------------------------------')
+                    return
+                }else{
+                    console.log("Column is full")
+                    return
+                }
         }
     }
 }
 
-// Find the floor for the clicked square
-function shiftSquareIndex(square){
+        /* Find the floor for the clicked square */
+
+function findFloor(clickedSquare){
 /* Get the height of the column selected.
 Find the difference between the heigth and the Y value of the selected square.
 Add the # of rows * 8 to find the appropriate index
@@ -252,18 +260,18 @@ Add the # of rows * 8 to find the appropriate index
 /* Check if click was below or above the column floor
     If it's below,  
 */
-    let diff = (square.y - columnHeights[square.x])
-    let indexCorrection
-
-    if (diff > 0){
-        indexCorrection = (square.index - (diff * 8))
-    }else if(diff < 0){
-        indexCorrection = (square.index + (diff * 8))
+    let diff = Math.abs(clickedSquare.y - columnHeights[clickedSquare.x])
+/*Find the square at the floor of the Selected Column
+*/
+    let floorSquare
+    if(clickedSquare.y > columnHeights[clickedSquare.x]){
+        floorSquare = squareIdList[clickedSquare.index - ( diff * 8)]
+    }else if (clickedSquare.y < columnHeights[clickedSquare.x]){
+        floorSquare = squareIdList[clickedSquare.index + (diff * 8)]
     }else{
-        indexCorrection = square.index
+        floorSquare = clickedSquare
     }
-
-    return indexCorrection
+    return floorSquare
 }
 
 // Select the chosen square from the list using the index
@@ -548,8 +556,8 @@ If a non-match is found, the matchList is emptied and will start over with the n
                 matchList.push(findIdenticalY[y][i])
                 /* Check for winner */
                 if (matchList.length >= 4){
-                    // console.log("Winner")
-                    // console.log(matchList)
+                    console.log("Winner")
+                    console.log(matchList)
                 }
             }
             /* Empty the matchList if a non-match is found */
@@ -576,6 +584,7 @@ If a non-match is found, the matchList is emptied and will start over with the n
                     if (matchList.length >= 4){
                         console.log("Winner")
                         console.log(matchList)
+                        return
                     }
                 }
                 /* Empty the matchList if a non-match is found */
@@ -584,49 +593,6 @@ If a non-match is found, the matchList is emptied and will start over with the n
                 }
             }
         }
-
-    console.log("No winner yet")
-    console.log(matchList)
-
-
-
-
-
-
-        
-
-
-
-
-
-
-        //Check for squares in same row
-        //Make a list of unique items
-        // for (let x = 0; x < sortedConsecutives.length; x++){
-        //     if (unique.includes(sortedConsecutives[x]).floor){
-        //         continue
-        //     }else if (!unique.includes(sortedConsecutives[x].floor)){//Adds new items to Unique Array
-        //         unique.push(sortedConsecutives[x])
-        //     }
-        // }
-        // //Count number of occurences for each square
-        // for(let x = 0; x < unique.length; x++){
-        //     matchList = []//Reset Match List if there were less than 4 Matches
-        //     let matches = 0
-        //     for (let i = 0; i < sortedConsecutives.length; i++){
-        //         if (unique[x].floor === sortedConsecutives[i].floor){//If coordinate occurs more than once, is added to Match List
-        //             matchList.push(sortedConsecutives[i])
-        //             matches++
-        //         }
-        //         if (matches >= 4){
-        //             console.log("Matches: " + matches)
-        //             console.log("Unique values: " + unique)
-        //             console.log("All Values: " + sortedConsecutives)
-        //             console.log("Match List: " + matchList)
-        //             return true
-        //         }
-        //     }
-        // }
     }
 
 }
