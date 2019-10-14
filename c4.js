@@ -118,20 +118,6 @@ function setClickPos(){
     setRelativePos()
 }
 
-//Populate the Board with squares and assign an ID to each square
-// let makeBoard = function (){
-//     for (let y = 0; y < rows; y++){
-//         for (let x = 0; x < columns; x++){
-
-//             let range = getSquareRange([x,y])
-//             let coord = [x,y,range]
-//             squareIdList.push(coord)//ID format [x,y]
-//         }
-
-//     }
-//     console.log(squareIdList)
-// }
-
 /* Creates a list with properties for each individual square on the board.
 Assigns each square an X & Y pixel boundary, so that clicks on the canvas
 can be matched with corresponding squares.
@@ -145,25 +131,25 @@ let makeBoard = function (){
                 "id":[x,y],
                 "x":x,
                 "y":y,
+                "floor":boardFloor,//Represents the Y value of the square played
                 "startX":range.startX,
                 "startY":range.startY,
                 "endX":range.endX,
                 "endY":range.endY,
                 "index":index,
                 "played":false,
-                "floor":boardFloor//Represents the Y value of the square played
             }
             squareIdList.push(squareInfo)
         }
         index++
     }
-    console.log(squareIdList)
+    // console.log(squareIdList)
 }
 
 function getImageData(){
     ctx = canvas.getContext("2d");
     let imgData = ctx.getImageData(relativePos()[0],relativePos()[1],2,2);
-    console.log(imgData)
+    // console.log(imgData)
 }
 
 function checkRange(a,b){
@@ -174,15 +160,15 @@ function checkRange(a,b){
     }
 }
 
-// Board properties
-//Get the width of the board to set the size of the squares
+/* Board properties
+Get the width of the board to set the size of the squares
+*/
 let setBoardWidth = function() {
     setCanvas()
     boardWidth = canvasBox.right - canvasBox.left
 }
 let setSquareSize = ()=>{
     squareSize = boardWidth/columns
-
     squareCount = rows * columns
 }
 
@@ -205,23 +191,6 @@ function drawGrid(){
         }
     }
 }
-
-//Outline the range of pixels that make up each square 
-// function getSquareRange(id){
-//     let x = id[0]
-//     let y = id[1]
-// //Starting point for each space
-//     let displaceX = x*squareSize
-//     let displaceY = y*squareSize
-// //End point for each space
-//     let edgeX = displaceX + squareSize
-//     let edgeY = displaceY + squareSize
-
-//     let rangeX = [displaceX,edgeX]
-//     let rangeY = [displaceY,edgeY]
-//     console.log([rangeX,rangeY])
-//     return [rangeX,rangeY]
-// }
 
 function getSquareRange(id){
     let x = id[0]
@@ -254,14 +223,12 @@ function clickSquare(){
         and matches with the appropriate array item
         */
         if (relativePosX > squareIdList[x].startX && relativePosX < squareIdList[x].endX && relativePosY > squareIdList[x].startY && relativePosY < squareIdList[x].endY){
-            // console.log("Square ID: " + squareIdList[x].id)
                 square = squareIdList[x]
                 square.floor = columnHeights[square.x]
                 squareSelection = square
                 console.log("Row: " + squareSelection.x)
                 console.log("Square Floor: " + squareSelection.floor)
-
-            
+            return
         }else{
         }
     }
@@ -344,13 +311,13 @@ function setTurn(){
 }
 //Find the lowest free space in selected column
 function freeSpaceGet(x){
-    let row = columnHeights[x]
-    return row
+    let column = columnHeights[x]
+    return column
 }
 
 function getLowestSquareY(){
-    let row = squareSelection.x//Get Selected row
-    let bottom = freeSpaceGet(row)//Find the lowest free space in the column
+    let column = squareSelection.x//Get Selected column
+    let bottom = freeSpaceGet(column)//Find the lowest free space in the column
     let lowestSquareY = bottom * squareSize
 
     return lowestSquareY
@@ -385,24 +352,33 @@ function squaresSortX(squareList){
     return sorted
 }
 
-/*Check for consecutive values
- Returns all groups of consecutive values of 4 or more
- Returns which dimension (X or Y) was consecutive. It will ignore this
- dimension and check the other one
-*/
                 /* CheckConsecutives */
+
+/*Check for consecutive patterns
+ Returns all groups of consecutive patterns of 4 or more
+ Returns which dimension (X and/or Y) was consecutive. 
+ If only one is consecutive, the next step will be to check for 
+ identical patterns that match the consecutive squares.
+Returns object:
+ consecutiveGroups = {
+                "x":consecutivesListX,
+                "y":consecutivesListY
+            }
+where x or y will contain a list of squares with consecutive X or Y values
+*/
 
     function checkConsecutives(orderedList){
         let consecutivesListX = []
         let consecutivesListY = []
     // Will hold the list of consecutive values
         let consecutives = []
+
     /*Check for Consecutive X values
     If 4 consecutive values are found, return the consecutives list
     */
         for(let x = 1; x < orderedList.length; x++){
             if(consecutives.length >= 4 ){
-                console.log("Consecutives: " + consecutives.length)
+                // console.log("Consecutives: " + consecutives.length)
                 // return consecutives
             }
             /* Checks for consecutive X values by finding whether the 
@@ -410,62 +386,78 @@ function squaresSortX(squareList){
             Then adds consecutive items to the consecutive list
             */
             if ((orderedList[x].x - orderedList[x-1].x) === 1){
-                if(x === 1){//Adds first item to list 
-                    consecutives.push(orderedList[0])
+                if(consecutives.length < 1){//Adds first item to list when list is empty 
+                    if(x === 1){
+                        consecutives.push(orderedList[0])
+                        consecutives.push(orderedList[1])
+                    }else{
+                        consecutives.push(orderedList[x])
+                    }
+                }else{// Adds current item when list is not empty
+                    consecutives.push(orderedList[x])
                 }
-                consecutives.push(orderedList[x])
-                // consecutives.length = consecutives.length
-            //Reset list if consecutive streak is broken
-            }else{
+
+            /*Reset list if consecutive streak is broken
+            Add consecutive items to consecutivesListX if there are 4 or more
+            */
+            }else if (consecutives.length >= 4){
                 consecutivesListX.push(consecutives)
                 consecutives = [];
-                // consecutives.length = consecutives.length
             }
-            // Add consecutives to consectiveListX if they haven't been already
-            if (consecutives.length >= 4){
-                consecutivesListX.push(consecutives)
-            } 
         }
-        if(consecutivesListX.length >= 1 ){//Check consecutivesListX.length before continuing
-            console.log("Consecutives groups: " + consecutivesListX)
+        // Add consecutives to consecutiveListX if they haven't been already
+        if (consecutives.length >= 4){
+            consecutivesListX.push(consecutives)
+            consecutives = []
         }
-        consecutives = []
         
+            /*Check for Consecutive Y values*/
+
     /*Checks for horizontal matches by identifying consecutive Y values
     Y values are represented as the 'floor'.
     Stops the loop if 4 consecutive values are found and returns the consecutives list.
-    */  
-        for(let x = 1; x < orderedList.length; x++){
-            if(consecutives.length >= 4 ){
-                console.log("Consecutives: " + consecutives.length)
-                // return consecutives
-            }
-            // If current pair of values is consecutive, adds them to the list
-            if ((orderedList[x].floor - orderedList[x-1].floor) === 1){
-                if(x === 1){//Adds first item to list 
-                    consecutives.push(orderedList[0])
-                }
-                consecutives.push(orderedList[x])
-                consecutives.length = consecutives.length
-
-        /* If the streak is broken:
-            If there were 4 or more consecutive values, add consecutives list to consecutivesListY
-            Empties the current list (consecutives)
-        */
+    */
+   
+    for(let y = 1; y < orderedList.length; y++){
+    if(consecutives.length >= 4 ){
+        // console.log("Consecutives: " + consecutives.length)
+    }
+    /* Checks for consecutive Y values by finding whether the 
+    difference between current & next value is equal to 1.
+    Then adds consecutive items to the consecutive list
+    */
+    if ((orderedList[y].y - orderedList[y-1].y) === 1){
+        if(consecutives.length < 1){//Adds first item to list when list is empty 
+            if(y === 1){
+                consecutives.push(orderedList[0])
+                consecutives.push(orderedList[1])
             }else{
-                if (consecutives.length >= 4){
-                    consecutivesListY.push(consecutives)
-                }
-                consecutives = [];
-                
-                // consecutives.length = consecutives.length
+                consecutives.push(orderedList[y])
             }
+        }else{// Adds current item when list is not empty
+            consecutives.push(orderedList[y])
         }
+
+    /*Reset list if consecutive streak is broken
+    Add consecutive items to consecutivesListY if there are 4 or more
+    */
+    }else if (consecutives.length >= 4){
+        consecutivesListY.push(consecutives)
+        consecutives = [];
+    }
+}
+// Add consecutives to consecutiveListY if they haven't been already
+if (consecutives.length >= 4){
+    consecutivesListY.push(consecutives)
+    consecutives = []
+}
     /*Check if consecutives list has any values before continuing
         
     */
-        if(consecutives.length >= 1 ){
-            console.log("Consecutives: " + consecutives)
+        if(consecutivesListX.length >= 1 || consecutivesListY.length >= 1){
+            // console.log("Consecutives X: " + consecutivesListX)
+            // console.log("Consecutives Y: " + consecutivesListY)
+
             let consecutiveGroups = {
                 "x":consecutivesListX,
                 "y":consecutivesListY
@@ -473,7 +465,6 @@ function squaresSortX(squareList){
             return consecutiveGroups
         }
         console.log("No consecutives")
-        // return false
     }
 
                 /* CheckIdentical*/
@@ -496,35 +487,41 @@ For sortedConsecutivesX, checks the Y value of each item.
 For sortedConsecutivesY, checks the X value of each item.
 If a winning set is found, the function ends and a winner is chosen
 */
+    let matchList = []
+
     /* Check for Y matches first */
     for (let y = 0; y < findIdenticalY.length; y++){
-        let matchListY = []
 /* Iterate through the lists.
 If there are 4 or more identical values, group them together in matchesList
 */
-        for (let i = 1; i < findIdenticalY[y].length; i++){
+        for (let i = 0; i < findIdenticalY[y].length;){
 /*Compare the current Y value with the upcoming one. 
 If the right number of matches are made, the game has been won
 If a non-match is found, the matchList is emptied and will start over with the new value.
 */
-            if (findIdenticalY[i].floor === findIdenticalY[i+1].floor){
-                matchListY.push(findIdenticalY[i])
+            /* Add the current item to the list if it is empty*/
+            if (matchList.length === 0){
+                matchList.push(findIdenticalY[y][i])
+            }
+            /* Check if the current value matches the following value */
+            else if (findIdenticalY[y][i].floor === findIdenticalY[y][i-1].floor){
+                matchList.push(findIdenticalY[y][i])
                 /* Check for winner */
-                if (matchListY.length >= 4){
-                    console.log("Winner")
-                    console.log(matchListY)
+                if (matchList.length >= 4){
+                    // console.log("Winner")
+                    // console.log(matchList)
                 }
             }
             /* Empty the matchList if a non-match is found */
             else{
-                matchListY = []
+                matchList = []
             }
+            i++
         }
 
         
         /* Check for X matches if none are found for Y */
         for (let x = 0; x < findIdenticalX.length; x++){
-            let matchListX = []
     /* Iterate through the lists.
     If there are 4 or more identical values, group them together in matchesList
     */
@@ -534,22 +531,22 @@ If a non-match is found, the matchList is emptied and will start over with the n
     If a non-match is found, the matchList is emptied and will start over with the new value.
     */
                 if (findIdenticalX[x].y === findIdenticalX[x+1].y){
-                    matchListX.push(findIdenticalX[x])
+                    matchList.push(findIdenticalX[x])
                     /* Check for winner */
-                    if (matchListX.length >= 4){
-                        console.log("Winner")
-                        console.log(matchListX)
+                    if (matchList.length >= 4){
+                        // console.log("Winner")
+                        // console.log(matchList)
                     }
                 }
                 /* Empty the matchList if a non-match is found */
                 else{
-                    matchListX = []
+                    matchList = []
                 }
             }
         }
 
-    console.log("No winner yet")
-    console.log(matchList)
+    // console.log("No winner yet")
+    // console.log(matchList)
 
 
 
@@ -606,20 +603,29 @@ function checkWin(){
             listSelected = idListBlack
         }
 
-        let check = checkConsecutives(squaresSortX(listSelected))
+        let check = false
+        try{
+            check = checkConsecutives(squaresSortX(listSelected))
+        }catch(e){
+            // console.log('No Consecutive Matches Yet')
+        }
         if (check){    
             if(checkIdentical(check)){
-                console.log("Connect 4!")
+                // console.log("Connect 4!")
                 return true
             }else{
+                // console.log('No winner Yet')
                 return false
             }
         }else{
+            // console.log('No winner Yet')
             return false
         }
     }else{
+        // console.log('No winner Yet')
         return
     }
+    
 }
 
 function buildBoard(){
