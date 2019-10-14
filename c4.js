@@ -128,20 +128,20 @@ let makeBoard = function (){
         for (let x = 0; x < columns; x++){
             let range = getSquareRange([x,y])
             let squareInfo = {
-                "id":[x,y],
+                "index":index,
+                "floor":boardFloor,//Represents the Y value of the square played
+                "coord":[x,y],
                 "x":x,
                 "y":y,
-                "floor":boardFloor,//Represents the Y value of the square played
                 "startX":range.startX,
                 "startY":range.startY,
                 "endX":range.endX,
                 "endY":range.endY,
-                "index":index,
                 "played":false,
             }
             squareIdList.push(squareInfo)
+            index++
         }
-        index++
     }
     // console.log(squareIdList)
 }
@@ -178,12 +178,12 @@ function drawGrid(){
     let length = boardWidth
 
     for (let x = 0; x < squareIdList.length; x++){
-        if(squareIdList[x].id[0] === 0){//Draw Horizontal Lines
+        if(squareIdList[x].coord[0] === 0){//Draw Horizontal Lines
             ctx.beginPath()
             ctx.moveTo(0,squareIdList[x].endY)//Start at [0,endY]
             ctx.lineTo(boardWidth,squareIdList[x].endY)//End at [right,endY]
             ctx.stroke()
-        }if(squareIdList[x].id[1] === 0){//Draw Vertical Lines
+        }if(squareIdList[x].coord[1] === 0){//Draw Vertical Lines
             ctx.beginPath()
             ctx.moveTo(squareIdList[x].endX,0)
             ctx.lineTo(squareIdList[x].endX,boardWidth)
@@ -191,7 +191,7 @@ function drawGrid(){
         }
     }
 }
-
+// Calculate the pixel range that will make up each square
 function getSquareRange(id){
     let x = id[0]
     let y = id[1]
@@ -223,16 +223,56 @@ function clickSquare(){
         and matches with the appropriate array item
         */
         if (relativePosX > squareIdList[x].startX && relativePosX < squareIdList[x].endX && relativePosY > squareIdList[x].startY && relativePosY < squareIdList[x].endY){
-                square = squareIdList[x]
+                clickedSquare = squareIdList[x]
+                square = squareIdList[shiftSquareIndex(clickedSquare)]
                 square.floor = columnHeights[square.x]
                 squareSelection = square
-                console.log("Row: " + squareSelection.x)
+                console.log("Clicked Index: " + x)
+                console.log("Clicked Y: " + clickedSquare.y)
+                console.log("Index: " + squareSelection.index)
+                // console.log("Row: " + squareSelection.x)
                 console.log("Square Floor: " + squareSelection.floor)
+                console.log("Column Height: " + columnHeights[square.x])
             return
         }else{
         }
     }
 }
+
+// Find the floor for the clicked square
+function shiftSquareIndex(square){
+/* Get the height of the column selected.
+Find the difference between the heigth and the Y value of the selected square.
+Add the # of rows * 8 to find the appropriate index
+*/
+
+/* Get height of selected row.
+    Find the difference between column height and click height
+    */
+/* Check if click was below or above the column floor
+    If it's below,  
+*/
+    let diff = (square.y - columnHeights[square.x])
+    let indexCorrection
+
+    if (diff > 0){
+        indexCorrection = (square.index - (diff * 8))
+    }else if(diff < 0){
+        indexCorrection = (square.index + (diff * 8))
+    }else{
+        indexCorrection = square.index
+    }
+
+    return indexCorrection
+}
+
+// Select the chosen square from the list using the index
+// function findSquare(index){
+//     let square = (
+//         function(squareIdList){
+//             return (squareIdList[index] ===)
+//     })
+// } 
 
 function handleClick(){
     let x = event.clientX
@@ -268,7 +308,7 @@ function setSpace(){
     if(turn === "red"){
         fillSquareRed(squareSelection.startX,lowestSquareY)
         squareIdList[squareSelection.index].played = true
-        squareIdList[squareSelection.index].floor = columnHeights[squareIdList[squareSelection.x]]
+        squareIdList[squareSelection.index].floor = columnHeights[squareSelection.x]
         freeSpaceAdvance(squareSelection.x)
         idListUpdate()
         turnsTaken += 1
@@ -277,7 +317,7 @@ function setSpace(){
     }else if(turn === "black"){
         fillSquareBlack(squareSelection.startX,lowestSquareY)
         squareIdList[squareSelection.index].played = true
-        squareIdList[squareSelection.index].floor = columnHeights[squareIdList[squareSelection.x]]
+        squareIdList[squareSelection.index].floor = columnHeights[squareSelection.x]
         freeSpaceAdvance(squareSelection.x)
         idListUpdate()
         turnsTaken += 1
@@ -534,8 +574,8 @@ If a non-match is found, the matchList is emptied and will start over with the n
                     matchList.push(findIdenticalX[x])
                     /* Check for winner */
                     if (matchList.length >= 4){
-                        // console.log("Winner")
-                        // console.log(matchList)
+                        console.log("Winner")
+                        console.log(matchList)
                     }
                 }
                 /* Empty the matchList if a non-match is found */
@@ -545,8 +585,8 @@ If a non-match is found, the matchList is emptied and will start over with the n
             }
         }
 
-    // console.log("No winner yet")
-    // console.log(matchList)
+    console.log("No winner yet")
+    console.log(matchList)
 
 
 
