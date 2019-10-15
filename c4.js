@@ -230,10 +230,7 @@ function clickSquare(){
                     square = findFloor(clickedSquare)
                     square.floor = columnHeights[square.x]
                     squareSelection = square
-                    console.log("Clicked Index: " + x)
-                    console.log("Clicked Y: " + clickedSquare.y)
                     console.log("Index: " + squareSelection.index)
-                    // console.log("Row: " + squareSelection.x)
                     console.log("Square Floor: " + squareSelection.floor)
                     console.log("Column Height: " + columnHeights[square.x])
                     console.log('------------------------------------------')
@@ -371,11 +368,11 @@ function getLowestSquareY(){
     return lowestSquareY
 }
 
-//Increase the height of the lowest free space
+/* Increase the height of the lowest free space */
 function freeSpaceAdvance(x){
     columnHeights[x] -= 1
 }
-//Add Selected Square to player's list of squares
+/* Add Selected Square to player's list of squares */
 function idListUpdate(){
     if (turn === "red"){
         idListRed.push(squareSelection)
@@ -383,7 +380,20 @@ function idListUpdate(){
         idListBlack.push(squareSelection)
     }
 }
-//Sort the player's spaces in numerical order
+
+/* Sort the Squares in ascending order by Index  */
+function indexSort(listSelected){
+    let list = listSelected
+    function compare(a,b){
+        if (a.index < b.index) return -1;
+        if (a.index > b.index) return 1;
+        return 0;
+    }
+    let sorted = list.sort(compare)
+    return sorted
+}
+
+/* Sort the player's spaces ascending order by X value*/
 function squaresSortX(squareList){
     let list = squareList
     function compare(a,b){
@@ -401,16 +411,10 @@ function squaresSortX(squareList){
 }
 
 
-
             /* Find Horizontal Matches */
-function findHorizontalMatches(){
+function findHorizontalMatches(listSelected){
     /* Choose the list based on the turn */ 
-    let playedSquareList
-    if(turn === 'red'){
-        playedSquareList = idListRed
-    }else{
-        playedSquareList = idListBlack
-    }
+    let playedSquareList = listSelected
     /*Scan the list for matches.
     Increment count each time a consecutive square is found.
     Reset if the streak is broken.*/
@@ -418,7 +422,7 @@ function findHorizontalMatches(){
    /*Break the list up into rows*/
    let rowList = []
    let row = 0 /*Get the row of the previous square*/
-   let streak = 0
+   let streak = 1
    let previousX = 0 /* square X value to compare */
 
 
@@ -427,11 +431,14 @@ function findHorizontalMatches(){
         let currentRow = playedSquareList[x].y
 
         /* If new square is on a different row, streak is broken.
-        Set to new row, reset streak */
+        Set to new row, set previousX to x of current square
+        Reset streak */
         if (currentRow != row){ 
             row = playedSquareList[x].y
-            streak = 0
-            previousX = 0            
+            rowList = []
+            rowList.push(playedSquareList[x])
+            previousX = playedSquareList[x].x 
+            streak = 1           
         }else if(currentRow === row){ /* Increment streak if row is the same */
             /* Check if X is consecutive with previous X. 
             If so, increment the streak & set Previous X.
@@ -442,10 +449,11 @@ function findHorizontalMatches(){
                 previousX = playedSquareList[x].x
                 /* Check if Consecutives of 4 or more are found */
                 if(streak >= 4){
-                    console.log("Streak Found, Match: " + playedSquareList)
+                    console.log("Streak Found, Match: " + rowList)
+                    return true
                 }
             }else{ /* Reset if squares are not consecutive */
-                streak = 0
+                streak = 1
                 rowList = []
                 previousX = playedSquareList[x].x
             }
@@ -453,6 +461,55 @@ function findHorizontalMatches(){
     }
 }            
 
+            /* Find Vertical Matches */
+function findVerticalMatches(xSortedList){
+    /* Choose the list based on the turn */ 
+    let playedSquareList = xSortedList
+    /*Scan the list for matches.
+    Increment count each time a consecutive square is found.
+    Reset if the streak is broken.*/
+
+   /*Break the list up into rows*/
+   let columnList = []
+   let column = 0 /*Get the row of the previous square*/
+   let streak = 1
+   let previousY = 0 /* square X value to compare */
+
+    
+    for (let y = 0; y < playedSquareList.length; y++){
+        /* Get the column of the current square. */
+        let currentColumn = playedSquareList[y].x
+
+        /* If new square is on a different row, streak is broken.
+        Set to new row, set previousX to x of current square
+        Reset streak */
+        if (currentColumn != column){ 
+            column = playedSquareList[y].x
+            columnList = []
+            columnList.push(playedSquareList[y])
+            previousY = playedSquareList[y].y
+            streak = 1           
+        }else if(currentColumn === column){ /* Increment streak if row is the same */
+            /* Check if X is consecutive with previous X. 
+            If so, increment the streak & set Previous X.
+            */
+            if(Math.abs(playedSquareList[y].y - previousY) === 1){
+                streak += 1
+                columnList.push(playedSquareList[y])
+                previousY = playedSquareList[y].y
+                /* Check if Consecutives of 4 or more are found */
+                if(streak >= 4){
+                    console.log("Streak Found, Match: " + columnList)
+                    return true
+                }
+            }else{ /* Reset if squares are not consecutive */
+                streak = 1
+                columnList = []
+                previousY = playedSquareList[y].y
+            }
+        }
+    }
+}  
 
                 /* CheckConsecutives */
 
@@ -692,24 +749,33 @@ function checkWin(){
             listSelected = idListBlack
         }
 
-        let check = false
-        try{
-            check = checkConsecutives(squaresSortX(listSelected))
-        }catch(e){
-            // console.log('No Consecutive Matches Yet')
+        // let check = false
+        // try{
+        //     check = checkConsecutives(squaresSortX(listSelected))
+        // }catch(e){
+        //     // console.log('No Consecutive Matches Yet')
+        // }
+        // if (check){    
+        //     if(checkIdentical(check)){
+        //         // console.log("Connect 4!")
+        //         return true
+        //     }else{
+        //         // console.log('No winner Yet')
+        //         return false
+        //     }
+        // }else{
+        //     // console.log('No winner Yet')
+        //     return false
+        // }
+
+        if(findHorizontalMatches(indexSort(listSelected))){
+            console.log("Horizontal Match Found!")
+            return
+        }else if(findVerticalMatches(squaresSortX(listSelected))){
+            console.log("Vertical Match Found!")
+            return
         }
-        if (check){    
-            if(checkIdentical(check)){
-                // console.log("Connect 4!")
-                return true
-            }else{
-                // console.log('No winner Yet')
-                return false
-            }
-        }else{
-            // console.log('No winner Yet')
-            return false
-        }
+        
     }else{
         // console.log('No winner Yet')
         return
