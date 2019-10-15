@@ -129,10 +129,10 @@ let makeBoard = function (){
             let range = getSquareRange([x,y])
             let squareInfo = {
                 "index":index,
-                "floor":boardFloor,//Represents the Y value of the square played
-                "coord":[x,y],
                 "x":x,
                 "y":y,
+                "floor":boardFloor,//Represents the Y value of the square played
+                "coord":[x,y],
                 "startX":range.startX,
                 "startY":range.startY,
                 "endX":range.endX,
@@ -433,7 +433,7 @@ where x or y will contain a list of squares with consecutive X or Y values
             difference between current & next value is equal to 1.
             Then adds consecutive items to the consecutive list
             */
-            if ((orderedList[x].x - orderedList[x-1].x) === 1){
+            if (Math.abs(orderedList[x].x - orderedList[x-1].x) === 1){
                 if(consecutives.length < 1){//Adds first item to list when list is empty 
                     if(x === 1){
                         consecutives.push(orderedList[0])
@@ -462,7 +462,6 @@ where x or y will contain a list of squares with consecutive X or Y values
             /*Check for Consecutive Y values*/
 
     /*Checks for horizontal matches by identifying consecutive Y values
-    Y values are represented as the 'floor'.
     Stops the loop if 4 consecutive values are found and returns the consecutives list.
     */
    
@@ -474,7 +473,7 @@ where x or y will contain a list of squares with consecutive X or Y values
     difference between current & next value is equal to 1.
     Then adds consecutive items to the consecutive list
     */
-    if ((orderedList[y].y - orderedList[y-1].y) === 1){
+    if (Math.abs(orderedList[y].y - orderedList[y-1].y) === 1){
         if(consecutives.length < 1){//Adds first item to list when list is empty 
             if(y === 1){
                 consecutives.push(orderedList[0])
@@ -537,62 +536,92 @@ If a winning set is found, the function ends and a winner is chosen
 */
     let matchList = []
 
-    /* Check for Y matches first */
-    for (let y = 0; y < findIdenticalY.length; y++){
-/* Iterate through the lists.
-If there are 4 or more identical values, group them together in matchesList
-*/
-        for (let i = 0; i < findIdenticalY[y].length;){
-/*Compare the current Y value with the upcoming one. 
-If the right number of matches are made, the game has been won
-If a non-match is found, the matchList is emptied and will start over with the new value.
-*/
-            /* Add the current item to the list if it is empty*/
-            if (matchList.length === 0){
-                matchList.push(findIdenticalY[y][i])
-            }
-            /* Check if the current value matches the following value */
-            else if (findIdenticalY[y][i].floor === findIdenticalY[y][i-1].floor){
-                matchList.push(findIdenticalY[y][i])
-                /* Check for winner */
-                if (matchList.length >= 4){
-                    console.log("Winner")
-                    console.log(matchList)
-                }
-            }
-            /* Empty the matchList if a non-match is found */
-            else{
-                matchList = []
-            }
-            i++
-        }
 
-        
-        /* Check for X matches if none are found for Y */
-        for (let x = 0; x < findIdenticalX.length; x++){
-    /* Iterate through the lists.
-    If there are 4 or more identical values, group them together in matchesList
-    */
-            for (let x = 1; x < findIdenticalX.length; x++){
-    /*Compare the current Y value with the upcoming one. 
-    If the right number of matches are made, the game has been won
-    If a non-match is found, the matchList is emptied and will start over with the new value.
-    */
-                if (findIdenticalX[x].y === findIdenticalX[x+1].y){
-                    matchList.push(findIdenticalX[x])
-                    /* Check for winner */
-                    if (matchList.length >= 4){
-                        console.log("Winner")
-                        console.log(matchList)
-                        return
+    /* Check for Y matches first */
+    if(findIdenticalY.length > 0){
+        for (let y = 0; y < findIdenticalY.length; y++){
+            /* Iterate through the lists.
+            If there are 4 or more identical values, group them together in matchesList
+            */
+                    for (let i = 0; i < findIdenticalY[y].length;){
+            /*Compare the current Y value with the upcoming one. 
+            If the right number of matches are made, the game has been won
+            If a non-match is found, the matchList is emptied and will start over with the new value.
+            */
+            /*When the list is empty, add the first two to avoid comparing to a number larger than the size of the array
+            */
+                        if (matchList.length === 0){
+                            // Check if they match before adding them to the array
+                            try{
+                                if(findIdenticalY[y][i].floor === findIdenticalY[y][i+1].floor ){
+                                    matchList.push(findIdenticalY[y][i])
+                                    matchList.push(findIdenticalY[y][i+1])
+                                }
+                                i++
+                            }
+                            catch(e){
+                                console.log("findIdenticalY: "+ findIdenticalY[y][i])
+                                i++
+                            }
+                        }
+                        /* Check if the current value matches the following value */
+                        else if (findIdenticalY[y][i].floor === findIdenticalY[y][i-1].floor){
+                            matchList.push(findIdenticalY[y][i])
+                            /* Check for winner */
+                            if (matchList.length >= 4){
+                                console.log("Winner")
+                                console.log(matchList)
+                            }
+                        }
+                        /* Empty the matchList if a non-match is found */
+                        else{
+                            matchList = []
+                        }
+                        i++
                     }
                 }
-                /* Empty the matchList if a non-match is found */
-                else{
-                    matchList = []
+    }
+
+
+    /* Check for X matches if none are found for Y */
+
+    if (findIdenticalX.length > 0){
+        for (let x = 0; x < findIdenticalX.length; x++){
+            /* Iterate through the lists.
+            If there are 4 or more identical values, group them together in matchesList
+            */
+                    for (let i = 0; i < findIdenticalX[x].length; i++){
+            /*Compare the current Y value with the upcoming one. 
+            If the right number of matches are made, the game has been won
+            If a non-match is found, the matchList is emptied and will start over with the new value.
+            */
+           /*When the list is empty, add the first two to avoid comparing to a number larger than the size of the array
+           */
+                        if (matchList.length === 0){
+                            // Check if they match before adding them to the array
+                            if(findIdenticalX[x][i].x === findIdenticalX[x][i+1].x ){
+                                matchList.push(findIdenticalX[x][i])
+                                matchList.push(findIdenticalX[x][i+1])
+                            }
+                            i++
+                        }
+                        else if(matchList.length > 0){
+                            if(findIdenticalX[x][i-1].x === findIdenticalX[x][i].x){
+                                matchList.push(findIdenticalX[x][i])
+                                /* Check for winner */
+                                if (matchList.length >= 4){
+                                    console.log("Winner")
+                                    console.log(matchList)
+                                    return
+                                }
+                            }
+                        }
+                        /* Empty the matchList if a non-match is found */
+                        else{
+                            matchList = []
+                        }
+                    }
                 }
-            }
-        }
     }
 
 }
