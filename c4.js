@@ -400,6 +400,60 @@ function squaresSortX(squareList){
     return sorted
 }
 
+
+
+            /* Find Horizontal Matches */
+function findHorizontalMatches(){
+    /* Choose the list based on the turn */ 
+    let playedSquareList
+    if(turn === 'red'){
+        playedSquareList = idListRed
+    }else{
+        playedSquareList = idListBlack
+    }
+    /*Scan the list for matches.
+    Increment count each time a consecutive square is found.
+    Reset if the streak is broken.*/
+
+   /*Break the list up into rows*/
+   let rowList = []
+   let row = 0 /*Get the row of the previous square*/
+   let streak = 0
+   let previousX = 0 /* square X value to compare */
+
+
+    for (let x = 0; x < playedSquareList.length; x++){
+        /* Get the row of the current square. */
+        let currentRow = playedSquareList[x].y
+
+        /* If new square is on a different row, streak is broken.
+        Set to new row, reset streak */
+        if (currentRow != row){ 
+            row = playedSquareList[x].y
+            streak = 0
+            previousX = 0            
+        }else if(currentRow === row){ /* Increment streak if row is the same */
+            /* Check if X is consecutive with previous X. 
+            If so, increment the streak & set Previous X.
+            */
+            if(Math.abs(playedSquareList[x].x - previousX) === 1){
+                streak += 1
+                rowList.push(playedSquareList[x])
+                previousX = playedSquareList[x].x
+                /* Check if Consecutives of 4 or more are found */
+                if(streak >= 4){
+                    console.log("Streak Found, Match: " + playedSquareList)
+                }
+            }else{ /* Reset if squares are not consecutive */
+                streak = 0
+                rowList = []
+                previousX = playedSquareList[x].x
+            }
+        }
+    }
+}            
+
+
                 /* CheckConsecutives */
 
 /*Check for consecutive patterns
