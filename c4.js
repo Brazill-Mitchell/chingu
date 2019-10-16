@@ -511,6 +511,97 @@ function findVerticalMatches(xSortedList){
     }
 }  
 
+            /* Find Diagonal Matches */
+function findDiagonalMatches(indexSortedList){
+    /* For each square in the list, check to see if there are squares where:
+    Y value is 1 lower && X value is either 1 higher or 1 lower.
+    If there is a match, check if X was higher or lower.
+    Continue checking in that direction(higher or lower) until count === 4
+    Reset count when streak is broken or row(Y) changes  
+    */
+
+    for (let x = 0; x > indexSortedList.length; x++){
+        /* Check for diagonal to the right, then left if none are found .
+        If checkDiagonal returns false, streak resets.
+        When streak reaches 4, function ends and winner is found
+        */
+        let matchLength = 4
+        let streak = 1
+        let diagonalList = []
+
+        /* Check for diagonals to the left */
+        
+        for (let l = 0; l < matchLength; l++){
+            let diagonal = checkDiagonal(indexSortedList[l],"left",l,streak)
+            if(diagonal){ /* End if winner is found .
+                Continue if streak isn't broken.
+                */
+                if(streak >= matchLength){
+                    console.log("Match! " + diagonalList)
+                    return
+                } 
+                else{
+                    diagonalList.push(diagonal)
+                    streak ++
+                }
+            }else{ /* If no diagonals are found to the left, try the right */
+                console.log("No Diagonal")
+                streak = 1
+                diagonal = []
+
+                /* Check for diagonals to the right */
+
+                for (let r = 0; r < matchLength; r++){
+                    let diagonal = checkDiagonal(indexSortedList[r],"right",r,streak)
+                    if(diagonal){
+                        diagonalList.push(diagonal)
+                        streak ++
+                    }else{
+
+                    }
+                }        
+            }
+
+        }
+
+    /* Check for single diagonal match in specified direction 
+   Return the square that is diagonal, or false if there is none
+   */
+  function checkDiagonal(square,direction,currentPosition,matchCount){
+      /* Multiplying the x & y by the current number of matches 
+      will increment the x & y positions by 1 each time a match is made
+      */
+        let xShift /* -1 for left, 1 for right */
+        if (direction === "left"){
+            xShift = -1 * matchCount
+        }else{
+            xShift = matchCount
+        }
+        
+        let diagonalSquare = checkSquare(square,currentPosition,xShift,matchCount)
+        
+        /* Query the list for a square that matches specified x & y 
+        */
+        function checkSquare(square,currentPosition,xShift,matchCount){
+            try{
+                let foundSquare
+                for (let x = currentPosition; indexSortedList.length; x++){
+                    if (indexSortedList[x].y === (square.y + matchCount) && indexSortedList[x].x === (square.x + xShift)){
+                        foundSquare = indexSortedList[x]
+                        return foundSquare
+                    }
+                    console.log('Diagonal found: ' + foundSquare)
+                    return foundSquare
+                }
+            }catch{
+                console.log("checkDiagonal(): checkSquare(): out of bounds: " + square)
+                return false
+            }
+        }
+        return diagonalSquare
+    }
+}
+
                 /* CheckConsecutives */
 
 /*Check for consecutive patterns
@@ -767,6 +858,8 @@ function checkWin(){
         //     // console.log('No winner Yet')
         //     return false
         // }
+
+        findDiagonalMatches(indexSort(listSelected))
 
         if(findHorizontalMatches(indexSort(listSelected))){
             console.log("Horizontal Match Found!")
