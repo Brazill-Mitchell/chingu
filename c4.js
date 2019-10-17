@@ -12,7 +12,7 @@ let boardWidth
 let rows = 8
 let columns = 8
 let squareCount
-// let squareIdList = []//idList format [[x,y,range],[x,y,range]] 
+let winAmount = 4
 let squareIdList = []
 let idListRed = []
 let idListBlack = []
@@ -96,7 +96,7 @@ function getRelativePos(dimension,pixelPos){
             position = pixelPos-canvasBox.top;
             break;
         default:
-            console.log("@getRelativePos: no dimension given")
+            // console.log("@getRelativePos: no dimension given")
     }
     return position;
 }
@@ -231,13 +231,14 @@ function clickSquare(){
                     square = findFloor(clickedSquare)
                     square.floor = columnHeights[square.x]
                     squareSelection = square
-                    console.log("Index: " + squareSelection.index)
-                    console.log("Square Floor: " + squareSelection.floor)
-                    console.log("Column Height: " + columnHeights[square.x])
-                    console.log('------------------------------------------')
+                    console.log(square)
+                    // console.log("Index: " + squareSelection.index)
+                    // console.log("Square Floor: " + squareSelection.floor)
+                    // console.log("Column Height: " + columnHeights[square.x])
+                    // console.log('------------------------------------------')
                     return
                 }else{
-                    console.log("Column is full")
+                    // console.log("Column is full")
                     return
                 }
         }
@@ -453,8 +454,8 @@ function findHorizontalMatches(listSelected){
                 streak += 1
                 rowList.push(playedSquareList[x])
                 previousX = playedSquareList[x].x
-                /* Check if Consecutives of 4 or more are found */
-                if(streak >= 4){
+                /* Check if Consecutives of winAmount or more are found */
+                if(streak >= winAmount){
                     console.log("Streak Found, Match: " + rowList)
                     return rowList
                 }
@@ -503,8 +504,8 @@ function findVerticalMatches(xSortedList){
                 streak += 1
                 columnList.push(playedSquareList[y])
                 previousY = playedSquareList[y].y
-                /* Check if Consecutives of 4 or more are found */
-                if(streak >= 4){
+                /* Check if Consecutives of winAmount or more are found */
+                if(streak >= winAmount){
                     console.log("Streak Found, Match: " + columnList)
                     return columnList
                 }
@@ -521,7 +522,7 @@ function findVerticalMatches(xSortedList){
 function findDiagonalMatches(indexSortedList){
     /* For each square in the list, check to see if there are squares where:
     Y value is 1 lower && X value is either 1 higher or 1 lower.
-    Check in one direction(higher or lower) until count === 4
+    Check in one direction(higher or lower) until count === winAmount
     Reset count when streak is broken or row(Y) changes  
     Then try the other direction
     */
@@ -529,9 +530,9 @@ function findDiagonalMatches(indexSortedList){
     for (let x = 0; x < indexSortedList.length; x++){
         /* For each square, check for diagonal to the left, then right if none are found .
         If checkDiagonal returns false, streak resets.
-        If streak reaches 4, function ends and winner is found
+        If streak reaches winAmount, function ends and winner is found
         */
-        let matchLength = 4
+        let matchLength = winAmount
         let streak = 1
         let diagonalList = []
         diagonalList.push(indexSortedList[x])
@@ -669,26 +670,35 @@ function showWinningSquares(winningSet){
     }
 }
 
+/* Create the board and set winning amount based on user input */
 function buildBoard(){
 //Clear Previous settings
+    won = false
     setCanvas()
     clearGameBoard()
     squareIdList = []
-    if (defaultSize){
-    }else{
-        let gridSize = parseInt(document.getElementById("setSquareCount").value)
-        columns = gridSize
-    rows = gridSize
+    idListRed = []
+    idListBlack = []
+    turnsTaken = 0
+    turn = 'red'
+    rows = 8
+    columns = 8
+    winAmount = 4
+    let customSize = parseInt(document.getElementById("setSquareCount").value)
+    let customWinAmout = parseInt(document.getElementById("setWinAmount").value)
+    if (customSize){
+        rows = customSize
+        columns = customSize
     }
-    
-
+    if(customWinAmout){
+        winAmount = customWinAmout
+    }
     setBoardFloor()
     setBoardWidth();
     setSquareSize();
     setColumnHeights()
     makeBoard();
     drawGrid();
-    defaultSize = false
 }
 
 function clearGameBoard(){
