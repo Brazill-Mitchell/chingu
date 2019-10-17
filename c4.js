@@ -230,16 +230,15 @@ function clickSquare(){
                 if(columnHeights[clickedSquare.x] > -1){
                     square = findFloor(clickedSquare)
                     square.floor = columnHeights[square.x]
-                    squareSelection = square
-                    console.log(square)
+                    // console.log(square)
                     // console.log("Index: " + squareSelection.index)
                     // console.log("Square Floor: " + squareSelection.floor)
                     // console.log("Column Height: " + columnHeights[square.x])
                     // console.log('------------------------------------------')
-                    return
+                    return square
                 }else{
                     // console.log("Column is full")
-                    return
+                    return false
                 }
         }
     }
@@ -254,19 +253,17 @@ Add the # of rows * 8 to find the appropriate index
 */
 
 /* Get height of selected row.
-    Find the difference between column height and click height
-    */
-/* Check if click was below or above the column floor
-    If it's below,  
+Find the difference between column height and click height.
+Check if click was below or above the column floor.
 */
     let diff = Math.abs(clickedSquare.y - columnHeights[clickedSquare.x])
 /*Find the square at the floor of the Selected Column
 */
     let floorSquare
     if(clickedSquare.y > columnHeights[clickedSquare.x]){
-        floorSquare = squareIdList[clickedSquare.index - ( diff * 8)]
+        floorSquare = squareIdList[clickedSquare.index - ( diff * columns)]
     }else if (clickedSquare.y < columnHeights[clickedSquare.x]){
-        floorSquare = squareIdList[clickedSquare.index + (diff * 8)]
+        floorSquare = squareIdList[clickedSquare.index + (diff * columns)]
     }else{
         floorSquare = clickedSquare
     }
@@ -276,19 +273,21 @@ Add the # of rows * 8 to find the appropriate index
 function handleClick(){
 
     if(won === false){
-        let x = event.clientX
-        let y = event.clientY
+    let x = event.clientX
+    let y = event.clientY
 
-        pixelX = event.clientX
-        pixelY = event.clientY
-        setClickPos()
+    pixelX = event.clientX
+    pixelY = event.clientY
+    setClickPos()
 
-        /* Execute canvas operations only when mouse is on canvas */
-        if (x >= canvasBox.left && x <= canvasBox.right && y >= canvasBox.top && y <= canvasBox.bottom){
-
-        clickSquare()
+    /* Execute canvas operations only when mouse is on canvas */
+    if (x >= canvasBox.left && x <= canvasBox.right && y >= canvasBox.top && y <= canvasBox.bottom){
+        
+    if(squareSelection = clickSquare()){
         setSpace()
         displaySquarePlayed()
+    }
+    
         }
     }
 }
@@ -426,16 +425,21 @@ function findHorizontalMatches(listSelected){
     Increment count each time a consecutive square is found.
     Reset if the streak is broken.*/
 
-   /*Break the list up into rows*/
-   let rowList = []
-   let row = 0 /*Get the row of the previous square*/
-   let streak = 1
-   let previousX = 0 /* square X value to compare */
+    /*Break the list up into rows*/
+    let rowList = []
+    let streak = 1
+    /* If there is a square at index 0, add to list first 
+    Get the row of the first square
+    */
+    let row = playedSquareList[0].y 
+    let previousX = playedSquareList[0].x /* square X value to compare */
 
 
-    for (let x = 0; x < playedSquareList.length; x++){
+    for (let x = 1; x < playedSquareList.length; x++){
         /* Get the row of the current square. */
         let currentRow = playedSquareList[x].y
+        /* Add the first item to the list if it is empty */
+        if(rowList.length === 0){rowList.push(playedSquareList[0])}
 
         /* If new square is on a different row, streak is broken.
         Set to new row, set previousX to x of current square
@@ -476,19 +480,23 @@ function findVerticalMatches(xSortedList){
     Increment count each time a consecutive square is found.
     Reset if the streak is broken.*/
 
-   /*Break the list up into rows*/
-   let columnList = []
-   let column = 0 /*Get the row of the previous square*/
-   let streak = 1
-   let previousY = 0 /* square X value to compare */
+    /*Break the list up into columns*/
+    let columnList = []
+    let streak = 1
+    /* If there is a square at index 0, add to list first 
+    Get the column of the first square
+    */
+    let column = playedSquareList[0] .x
+    let previousY = playedSquareList[0].y /* square Y value to compare */
 
     
-    for (let y = 0; y < playedSquareList.length; y++){
+    for (let y = 1; y < playedSquareList.length; y++){
         /* Get the column of the current square. */
         let currentColumn = playedSquareList[y].x
+        if (columnList.length === 0){columnList.push(playedSquareList[0])}
 
-        /* If new square is on a different row, streak is broken.
-        Set to new row, set previousX to x of current square
+        /* If new square is in a different column, streak is broken.
+        Set to new column, set previousY to y of current square
         Reset streak */
         if (currentColumn != column){ 
             column = playedSquareList[y].x
@@ -496,9 +504,9 @@ function findVerticalMatches(xSortedList){
             columnList.push(playedSquareList[y])
             previousY = playedSquareList[y].y
             streak = 1           
-        }else if(currentColumn === column){ /* Increment streak if row is the same */
-            /* Check if X is consecutive with previous X. 
-            If so, increment the streak & set Previous X.
+        }else if(currentColumn === column){ /* Increment streak if column is the same */
+            /* Check if Y is consecutive with previous Y. 
+            If so, increment the streak & set Previous Y.
             */
             if(Math.abs(playedSquareList[y].y - previousY) === 1){
                 streak += 1
@@ -554,23 +562,26 @@ function findDiagonalMatches(indexSortedList){
             if(diagonal){
                 diagonalList.push(diagonal)
                 streak ++
-                if(streak >=matchLength){
+                if(streak >= matchLength){
                     console.log("Match! " + diagonalList)
                     return diagonalList
                 }
-                }
-            else{ /* If no diagonals are found to the left, try the right */
-                console.log("No Diagonal")
+            }
+            /* If no diagonals are found to the left, try the right */
+            else{ 
+                // console.log("No Diagonal")
                 streak = 1
-                diagonal = []
+                diagonalList = [currentSquare]
 
-                /* Check for diagonals to the right */
+                /* Check for diagonals to the right 
+                Reset if nothing is found
+                */
                 if(streak >= matchLength){
                     console.log("Match! " + diagonalList)
                     return diagonalList
                 }
                 for (let r = 0; r < matchLength; r++){
-                    let diagonal = checkDiagonal(indexSortedList[r],"right",r,streak)
+                    let diagonal = checkDiagonal(currentSquare,"right",streak)
                     if(diagonal){
                         diagonalList.push(diagonal)
                         streak ++
@@ -579,6 +590,10 @@ function findDiagonalMatches(indexSortedList){
                             return diagonalList
                         }
                         
+                    }else{
+                        diagonalList = []
+                        streak = 1
+                        r = matchLength
                     }
                 }        
             }
@@ -608,12 +623,12 @@ function findDiagonalMatches(indexSortedList){
                     for (let x = 1; indexSortedList.length; x++){
                         if (indexSortedList[x].y === (square.y + matchCount) && indexSortedList[x].x === (square.x + xShift)){
                             foundSquare = indexSortedList[x]
-                            console.log('Diagonal found: ' + foundSquare)
+                            // console.log('Diagonal found: ' + foundSquare)
                             return foundSquare
                         }
                     }
                 }catch{
-                    console.log("checkDiagonal(): checkSquare(): out of bounds: " + square)
+                    // console.log("checkDiagonal(): checkSquare(): out of bounds: " + square)
                     return false
                 }
             }
@@ -624,7 +639,7 @@ function findDiagonalMatches(indexSortedList){
 
 //Check for a winner
 function checkWin(){
-    if(turnsTaken >= 7){
+    if(turnsTaken >= (winAmount*2) - 1){
 
         let listSelected = []
         //Determine which player's list to check
@@ -638,13 +653,13 @@ function checkWin(){
 
         if(findHorizontalMatches(indexSort(listSelected))){
             winningSet = findHorizontalMatches(indexSort(listSelected))
-            console.log("Horizontal Match Found!")
+            console.log("Horizontal Match Found!" + winningSet)
         }else if(findVerticalMatches(squaresSortX(listSelected))){
             winningSet = findVerticalMatches(squaresSortX(listSelected))
-            console.log("Vertical Match Found!")
+            console.log("Vertical Match Found!" + winningSet)
         }else if(findDiagonalMatches(indexSort(listSelected))){
             winningSet = findDiagonalMatches(indexSort(listSelected))
-            console.log("Diagonal Match Found!")
+            console.log("Diagonal Match Found!" + winningSet)
         }
 
         if(winningSet){
