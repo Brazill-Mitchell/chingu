@@ -7,3 +7,7 @@ Then, press the button to create the board.
 
 Try it here<br>
 https://brazill-mitchell.github.io/chingu/
+
+
+**Note**
+It's an older project I recently fixed. As such, it contains the dreaded 'setInnerHTML'.
