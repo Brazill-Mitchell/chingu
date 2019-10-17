@@ -9,5 +9,5 @@ Try it here<br>
 https://brazill-mitchell.github.io/chingu/
 
 
-**Note**
+**Note:**</br>
 It's an older project I recently fixed. As such, it contains the dreaded 'setInnerHTML'.
