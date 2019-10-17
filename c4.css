@@ -1,7 +1,14 @@
 .label{
     font-size: 24px
 }
-
+.settings-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+    /* background-color: aliceblue; */
+    left: -25%;
+}
 #turn-display{
     height: 100px;
     width: 100px;
