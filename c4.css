@@ -1,6 +1,15 @@
 .label{
     font-size: 24px
 }
+
+#turn-display{
+    height: 100px;
+    width: 100px;
+    font-size: 70px;
+    text-align: center;
+    background-color: red;
+}
+
 #const-notice-container{
     position: absolute;
     top: 25%;
