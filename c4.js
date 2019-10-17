@@ -20,12 +20,16 @@ let turn = "red"
 let turnsTaken = 0
 let squareSelection
 let boardFloor
-let rowHeights = {}
+let columnHeights = {}
 let defaultSize = true
+let won = false
 
-function setRowHeights(){
+/* Set the height of each column based on the floor level,
+which is also the 'Board Size'
+*/
+function setColumnHeights(){
     for (let x = 0; x < columns; x++){
-        rowHeights[x] = boardFloor
+        columnHeights[x] = boardFloor
     }
 }
 
@@ -115,48 +119,38 @@ function setClickPos(){
     setRelativePos()
 }
 
-//Populate the Board with squares and assign an ID to each square
-// let makeBoard = function (){
-//     for (let y = 0; y < rows; y++){
-//         for (let x = 0; x < columns; x++){
-
-//             let range = getSquareRange([x,y])
-//             let coord = [x,y,range]
-//             squareIdList.push(coord)//ID format [x,y]
-//         }
-
-//     }
-//     console.log(squareIdList)
-// }
-
+/* Creates a list with properties for each individual square on the board.
+Assigns each square an X & Y pixel boundary, so that clicks on the canvas
+can be matched with corresponding squares.
+*/
 let makeBoard = function (){
     let index = 0
     for (let y = 0; y < rows; y++){
         for (let x = 0; x < columns; x++){
             let range = getSquareRange([x,y])
             let squareInfo = {
-                "id":[x,y],
+                "index":index,
                 "x":x,
                 "y":y,
+                "floor":boardFloor,//Represents the Y value of the square played
+                "coord":[x,y],
                 "startX":range.startX,
                 "startY":range.startY,
                 "endX":range.endX,
                 "endY":range.endY,
-                "index":index,
                 "played":false,
-                "floor":boardFloor//Represents the actual placement of the square played
             }
             squareIdList.push(squareInfo)
+            index++
         }
-        index++
     }
-    console.log(squareIdList)
+    // console.log(squareIdList)
 }
 
 function getImageData(){
     ctx = canvas.getContext("2d");
     let imgData = ctx.getImageData(relativePos()[0],relativePos()[1],2,2);
-    console.log(imgData)
+    // console.log(imgData)
 }
 
 function checkRange(a,b){
@@ -167,15 +161,15 @@ function checkRange(a,b){
     }
 }
 
-// Board properties
-//Get the width of the board to set the size of the squares
+/* Board properties
+Get the width of the board to set the size of the squares
+*/
 let setBoardWidth = function() {
     setCanvas()
     boardWidth = canvasBox.right - canvasBox.left
 }
 let setSquareSize = ()=>{
     squareSize = boardWidth/columns
-
     squareCount = rows * columns
 }
 
@@ -185,12 +179,12 @@ function drawGrid(){
     let length = boardWidth
 
     for (let x = 0; x < squareIdList.length; x++){
-        if(squareIdList[x].id[0] === 0){//Draw Horizontal Lines
+        if(squareIdList[x].coord[0] === 0){//Draw Horizontal Lines
             ctx.beginPath()
             ctx.moveTo(0,squareIdList[x].endY)//Start at [0,endY]
             ctx.lineTo(boardWidth,squareIdList[x].endY)//End at [right,endY]
             ctx.stroke()
-        }if(squareIdList[x].id[1] === 0){//Draw Vertical Lines
+        }if(squareIdList[x].coord[1] === 0){//Draw Vertical Lines
             ctx.beginPath()
             ctx.moveTo(squareIdList[x].endX,0)
             ctx.lineTo(squareIdList[x].endX,boardWidth)
@@ -198,24 +192,7 @@ function drawGrid(){
         }
     }
 }
-
-//Outline the range of pixels that make up each square 
-// function getSquareRange(id){
-//     let x = id[0]
-//     let y = id[1]
-// //Starting point for each space
-//     let displaceX = x*squareSize
-//     let displaceY = y*squareSize
-// //End point for each space
-//     let edgeX = displaceX + squareSize
-//     let edgeY = displaceY + squareSize
-
-//     let rangeX = [displaceX,edgeX]
-//     let rangeY = [displaceY,edgeY]
-//     console.log([rangeX,rangeY])
-//     return [rangeX,rangeY]
-// }
-
+// Calculate the pixel range that will make up each square
 function getSquareRange(id){
     let x = id[0]
     let y = id[1]
@@ -236,40 +213,83 @@ function getSquareRange(id){
     return range
 }
 
-//Set a value for the actual square that was clicked
+/*--Assign a value to the space that was set--
+Identifies the actual space on the canvas that was clicked,
+then matches that space with the relevant item in the squareIdList.
+Stops if selected column is full
+*/
 function clickSquare(){
     let square = []
     for (let x = 0; x < squareIdList.length; x++){
+        /* Takes the click position and finds the X & Y boundaries for that coordinate,
+        and matches with the appropriate array item
+        */
         if (relativePosX > squareIdList[x].startX && relativePosX < squareIdList[x].endX && relativePosY > squareIdList[x].startY && relativePosY < squareIdList[x].endY){
-            // console.log("Square ID: " + squareIdList[x].id)
-                square = squareIdList[x]
-                square.floor = rowHeights[square.x]
-                squareSelection = square
-                console.log("Row: " + squareSelection.x)
-                console.log("Square Floor: " + squareSelection.floor)
+                clickedSquare = squareIdList[x]
 
-            
-        }else{
+                if(columnHeights[clickedSquare.x] > -1){
+                    square = findFloor(clickedSquare)
+                    square.floor = columnHeights[square.x]
+                    squareSelection = square
+                    console.log("Index: " + squareSelection.index)
+                    console.log("Square Floor: " + squareSelection.floor)
+                    console.log("Column Height: " + columnHeights[square.x])
+                    console.log('------------------------------------------')
+                    return
+                }else{
+                    console.log("Column is full")
+                    return
+                }
         }
     }
 }
 
-function handleClick(){
-    let x = event.clientX
-    let y = event.clientY
+        /* Find the floor for the clicked square */
 
-    pixelX = event.clientX
-    pixelY = event.clientY
-    setClickPos()
-//Execute canvas operations only when mouse if one canvas
-    if (x >= canvasBox.left && x <= canvasBox.right && y >= canvasBox.top && y <= canvasBox.bottom){
+function findFloor(clickedSquare){
+/* Get the height of the column selected.
+Find the difference between the heigth and the Y value of the selected square.
+Add the # of rows * 8 to find the appropriate index
+*/
 
-    clickSquare()
-    setSpace()
-    displaySquarePlayed()
+/* Get height of selected row.
+    Find the difference between column height and click height
+    */
+/* Check if click was below or above the column floor
+    If it's below,  
+*/
+    let diff = Math.abs(clickedSquare.y - columnHeights[clickedSquare.x])
+/*Find the square at the floor of the Selected Column
+*/
+    let floorSquare
+    if(clickedSquare.y > columnHeights[clickedSquare.x]){
+        floorSquare = squareIdList[clickedSquare.index - ( diff * 8)]
+    }else if (clickedSquare.y < columnHeights[clickedSquare.x]){
+        floorSquare = squareIdList[clickedSquare.index + (diff * 8)]
+    }else{
+        floorSquare = clickedSquare
     }
-    
-    
+    return floorSquare
+}
+
+function handleClick(){
+
+    if(won === false){
+        let x = event.clientX
+        let y = event.clientY
+
+        pixelX = event.clientX
+        pixelY = event.clientY
+        setClickPos()
+
+        /* Execute canvas operations only when mouse is on canvas */
+        if (x >= canvasBox.left && x <= canvasBox.right && y >= canvasBox.top && y <= canvasBox.bottom){
+
+        clickSquare()
+        setSpace()
+        displaySquarePlayed()
+        }
+    }
 }
 
 function displaySquarePlayed(){
@@ -279,13 +299,16 @@ function displaySquarePlayed(){
     squareY.innerHTML = squareSelection.floor
 }
 
+/* Finds the lowest unfilled square, then
+ fills the space depending on which turn it is
+ */
 function setSpace(){
     let lowestSquareY = getLowestSquareY()
 
     if(turn === "red"){
         fillSquareRed(squareSelection.startX,lowestSquareY)
         squareIdList[squareSelection.index].played = true
-        squareIdList[squareSelection.index].floor = rowHeights[squareIdList[squareSelection.x]]
+        squareIdList[squareSelection.index].floor = columnHeights[squareSelection.x]
         freeSpaceAdvance(squareSelection.x)
         idListUpdate()
         turnsTaken += 1
@@ -294,7 +317,7 @@ function setSpace(){
     }else if(turn === "black"){
         fillSquareBlack(squareSelection.startX,lowestSquareY)
         squareIdList[squareSelection.index].played = true
-        squareIdList[squareSelection.index].floor = rowHeights[squareIdList[squareSelection.x]]
+        squareIdList[squareSelection.index].floor = columnHeights[squareSelection.x]
         freeSpaceAdvance(squareSelection.x)
         idListUpdate()
         turnsTaken += 1
@@ -319,32 +342,43 @@ function fillSquareBlack(x,y){
     ctx.fill();
 }
 
+/* If there is no winner, toggle who's turn it is */
 function setTurn(){
-    if (turn === "red"){
-        turn = "black"
-    }else if(turn === "black"){
-        turn = "red"
+    if(won === true){
+        return
+    }else{
+        if (turn === "red"){
+            turn = "black"
+            let turnDisplay = document.getElementById("turn-display")
+            let turnColor = "background-color: " + turn
+            turnDisplay.style = turnColor
+        }else if(turn === "black"){
+            turn = "red"
+            let turnDisplay = document.getElementById("turn-display")
+            let turnColor = "background-color: " + turn
+            turnDisplay.style = turnColor
+        }
     }
 }
 //Find the lowest free space in selected column
 function freeSpaceGet(x){
-    let row = rowHeights[x]
-    return row
+    let column = columnHeights[x]
+    return column
 }
 
 function getLowestSquareY(){
-    let row = squareSelection.x//Get Selected row
-    let bottom = freeSpaceGet(row)//Find the lowest free space in the row
+    let column = squareSelection.x//Get Selected column
+    let bottom = freeSpaceGet(column)//Find the lowest free space in the column
     let lowestSquareY = bottom * squareSize
 
     return lowestSquareY
 }
 
-//Increase the height of the lowest free space
+/* Increase the height of the lowest free space */
 function freeSpaceAdvance(x){
-    rowHeights[x] -= 1
+    columnHeights[x] -= 1
 }
-//Add Selected Square to player's list of squares
+/* Add Selected Square to player's list of squares */
 function idListUpdate(){
     if (turn === "red"){
         idListRed.push(squareSelection)
@@ -352,7 +386,20 @@ function idListUpdate(){
         idListBlack.push(squareSelection)
     }
 }
-//Sort the players spaces in numerical order
+
+/* Sort the Squares in ascending order by Index  */
+function indexSort(listSelected){
+    let list = listSelected
+    function compare(a,b){
+        if (a.index < b.index) return -1;
+        if (a.index > b.index) return 1;
+        return 0;
+    }
+    let sorted = list.sort(compare)
+    return sorted
+}
+
+/* Sort the player's spaces ascending order by X value*/
 function squaresSortX(squareList){
     let list = squareList
     function compare(a,b){
@@ -369,121 +416,207 @@ function squaresSortX(squareList){
     return sorted
 }
 
-//Check for consecutive values
-//Returns all groups of consecutive values of 4 or more
-function checkConsecutives(orderedList){
-    let consecutivesListX = []
-    let consecutivesListY = []
-    let consecutives = []
-//Check for Consecutive X values
-    for(let x = 1; x < orderedList.length; x++){
-        if(consecutives.length >= 4 ){//If 4 consecutive values are found, return the consecutives.length list
-            console.log("Consecutives: " + consecutives.length)
-            // return consecutives
-        }
-        if ((orderedList[x].x - orderedList[x-1].x) === 1){//Add consecutive items to the list 
-            if(x === 1){//Adds first item to list 
-                consecutives.push(orderedList[0])
-            }
-            consecutives.push(orderedList[x])
-            consecutives.length = consecutives.length
-        }else{//Reset list if consecutive streak is broken
-            consecutivesListX.push(consecutives)
-            consecutives = [];
-            consecutives.length = consecutives.length
-        }
-    }
-    if(consecutivesListX.length >= 1 ){//Check consecutivesListX.length before continuing
-        console.log("Consecutives groups: " + consecutivesListX)
-    }
-    consecutives = []
-//Check for Consecutive Y values
-    for(let x = 1; x < orderedList.length; x++){
-        if(consecutives.length >= 4 ){//If 4 consecutive values are found, return the consecutives.length list
-            console.log("Consecutives: " + consecutives.length)
-            // return consecutives
-        }
-        if ((orderedList[x].floor - orderedList[x-1].floor) === 1){//Add consecutive items to the list 
-            if(x === 1){//Adds first item to list 
-                consecutives.push(orderedList[0])
-            }
-            consecutives.push(orderedList[x])
-            consecutives.length = consecutives.length
-        }else{//Reset list if consecutive streak is broken
-            consecutivesListY.push(consecutives)
-            consecutives = [];
-            consecutives.length = consecutives.length
-        }
-    }
-    if(consecutivesListY.length >= 1 ){//Check consecutiveListY.length before continuing
-        console.log("Consecutives groups: " + consecutives)
-        let consecutiveGroups = {
-            "x":consecutivesListX,
-            "y":consecutivesListY
-        }
-        return consecutiveGroups
-    }
-    console.log("No consecutives")
-    return false
-}
 
-//Check for number of Identical Values in a List
-//Use to determine if squares are in same row/column
-function checkIdentical(list){
-    let unique = []
-    let matchList = []
-//Check for squares in same row
-    //Make a list of unique items
-    for (let x = 0; x < list.length; x++){
-        if (unique.includes(list[x]).x){
-            continue
-        }else if (!unique.includes(list[x].x)){//Adds new items to Unique Array
-            unique.push(list[x])
+            /* Find Horizontal Matches */
+function findHorizontalMatches(listSelected){
+    /* Choose the list based on the turn */ 
+    let playedSquareList = listSelected
+    /*Scan the list for matches.
+    Increment count each time a consecutive square is found.
+    Reset if the streak is broken.*/
+
+   /*Break the list up into rows*/
+   let rowList = []
+   let row = 0 /*Get the row of the previous square*/
+   let streak = 1
+   let previousX = 0 /* square X value to compare */
+
+
+    for (let x = 0; x < playedSquareList.length; x++){
+        /* Get the row of the current square. */
+        let currentRow = playedSquareList[x].y
+
+        /* If new square is on a different row, streak is broken.
+        Set to new row, set previousX to x of current square
+        Reset streak */
+        if (currentRow != row){ 
+            row = playedSquareList[x].y
+            rowList = []
+            rowList.push(playedSquareList[x])
+            previousX = playedSquareList[x].x 
+            streak = 1           
+        }else if(currentRow === row){ /* Increment streak if row is the same */
+            /* Check if X is consecutive with previous X. 
+            If so, increment the streak & set Previous X.
+            */
+            if(Math.abs(playedSquareList[x].x - previousX) === 1){
+                streak += 1
+                rowList.push(playedSquareList[x])
+                previousX = playedSquareList[x].x
+                /* Check if Consecutives of 4 or more are found */
+                if(streak >= 4){
+                    console.log("Streak Found, Match: " + rowList)
+                    return rowList
+                }
+            }else{ /* Reset if squares are not consecutive */
+                streak = 1
+                rowList = []
+                previousX = playedSquareList[x].x
+            }
         }
     }
-    //Count number of occurences for each square
-    for(let x = 0; x < unique.length; x++){
-        matchList = []//Reset Match List if there were less than 4 Matches
-        let matches = 0
-        for (let i = 0; i < list.length; i++){
-            if (unique[x].x === list[i].x){//If coordinate occurs more than once, is added to Match List
-                matchList.push(list[i])
-                matches++
-            }
-            if (matches >= 4){
-                console.log("Matches: " + matches)
-                console.log("Unique values: " + unique)
-                console.log("All Values: " + list)
-                console.log("Match List: " + matchList[3].floor)
-                return true
+}            
+
+            /* Find Vertical Matches */
+function findVerticalMatches(xSortedList){
+    /* Choose the list based on the turn */ 
+    let playedSquareList = xSortedList
+    /*Scan the list for matches.
+    Increment count each time a consecutive square is found.
+    Reset if the streak is broken.*/
+
+   /*Break the list up into rows*/
+   let columnList = []
+   let column = 0 /*Get the row of the previous square*/
+   let streak = 1
+   let previousY = 0 /* square X value to compare */
+
+    
+    for (let y = 0; y < playedSquareList.length; y++){
+        /* Get the column of the current square. */
+        let currentColumn = playedSquareList[y].x
+
+        /* If new square is on a different row, streak is broken.
+        Set to new row, set previousX to x of current square
+        Reset streak */
+        if (currentColumn != column){ 
+            column = playedSquareList[y].x
+            columnList = []
+            columnList.push(playedSquareList[y])
+            previousY = playedSquareList[y].y
+            streak = 1           
+        }else if(currentColumn === column){ /* Increment streak if row is the same */
+            /* Check if X is consecutive with previous X. 
+            If so, increment the streak & set Previous X.
+            */
+            if(Math.abs(playedSquareList[y].y - previousY) === 1){
+                streak += 1
+                columnList.push(playedSquareList[y])
+                previousY = playedSquareList[y].y
+                /* Check if Consecutives of 4 or more are found */
+                if(streak >= 4){
+                    console.log("Streak Found, Match: " + columnList)
+                    return columnList
+                }
+            }else{ /* Reset if squares are not consecutive */
+                streak = 1
+                columnList = []
+                previousY = playedSquareList[y].y
             }
         }
     }
-    //Check for squares in same row
-    //Make a list of unique items
-    for (let x = 0; x < list.length; x++){
-        if (unique.includes(list[x]).floor){
-            continue
-        }else if (!unique.includes(list[x].floor)){//Adds new items to Unique Array
-            unique.push(list[x])
+}  
+
+            /* Find Diagonal Matches */
+function findDiagonalMatches(indexSortedList){
+    /* For each square in the list, check to see if there are squares where:
+    Y value is 1 lower && X value is either 1 higher or 1 lower.
+    Check in one direction(higher or lower) until count === 4
+    Reset count when streak is broken or row(Y) changes  
+    Then try the other direction
+    */
+
+    for (let x = 0; x < indexSortedList.length; x++){
+        /* For each square, check for diagonal to the left, then right if none are found .
+        If checkDiagonal returns false, streak resets.
+        If streak reaches 4, function ends and winner is found
+        */
+        let matchLength = 4
+        let streak = 1
+        let diagonalList = []
+        diagonalList.push(indexSortedList[x])
+
+        let currentSquare = indexSortedList[x]
+        /* Check for diagonals to the left */
+        
+        for (let l = 0; l < matchLength; l++){
+            /* End if winner is found .
+            Continue if streak isn't broken.
+            */
+            if(streak >= matchLength){
+                console.log("Match! " + diagonalList)
+                return diagonalList
+            } 
+            let diagonal = checkDiagonal(currentSquare,"left",streak)
+            /* If diagonal to the left is found, add to the list,
+            then check for a winner */
+            if(diagonal){
+                diagonalList.push(diagonal)
+                streak ++
+                if(streak >=matchLength){
+                    console.log("Match! " + diagonalList)
+                    return diagonalList
+                }
+                }
+            else{ /* If no diagonals are found to the left, try the right */
+                console.log("No Diagonal")
+                streak = 1
+                diagonal = []
+
+                /* Check for diagonals to the right */
+                if(streak >= matchLength){
+                    console.log("Match! " + diagonalList)
+                    return diagonalList
+                }
+                for (let r = 0; r < matchLength; r++){
+                    let diagonal = checkDiagonal(indexSortedList[r],"right",r,streak)
+                    if(diagonal){
+                        diagonalList.push(diagonal)
+                        streak ++
+                        if(streak >= matchLength){
+                            console.log("Match! " + diagonalList)
+                            return diagonalList
+                        }
+                        
+                    }
+                }        
+            }
         }
-    }
-    //Count number of occurences for each square
-    for(let x = 0; x < unique.length; x++){
-        matchList = []//Reset Match List if there were less than 4 Matches
-        let matches = 0
-        for (let i = 0; i < list.length; i++){
-            if (unique[x].floor === list[i].floor){//If coordinate occurs more than once, is added to Match List
-                matchList.push(list[i])
-                matches++
+
+    /* Check for single diagonal match in specified direction 
+    Return the square that is diagonal, or false if there is none
+    */
+    function checkDiagonal(square,direction,matchCount){
+        /* Multiplying the x & y by the current number of matches 
+        will increment the x & y positions by 1 each time a match is made
+        */
+            let xShift /* -1 for left, 1 for right */
+            if (direction === "left"){
+                xShift = -1 * matchCount
+            }else{
+                xShift = matchCount
             }
-            if (matches >= 4){
-                console.log("Matches: " + matches)
-                console.log("Unique values: " + unique)
-                console.log("All Values: " + list)
-                console.log("Match List: " + matchList)
-                return true
+            
+            let diagonalSquare = checkSquare(square,xShift,matchCount)
+            
+            /* Query the list for a square that matches specified x & y 
+            */
+            function checkSquare(square,xShift,matchCount){
+                try{
+                    let foundSquare
+                    for (let x = 1; indexSortedList.length; x++){
+                        if (indexSortedList[x].y === (square.y + matchCount) && indexSortedList[x].x === (square.x + xShift)){
+                            foundSquare = indexSortedList[x]
+                            console.log('Diagonal found: ' + foundSquare)
+                            return foundSquare
+                        }
+                    }
+                }catch{
+                    console.log("checkDiagonal(): checkSquare(): out of bounds: " + square)
+                    return false
+                }
             }
+            return diagonalSquare
         }
     }
 }
@@ -500,19 +633,39 @@ function checkWin(){
             listSelected = idListBlack
         }
 
-        let check
-        if (check = checkConsecutives(squaresSortX(listSelected))){    
-            if(checkIdentical(check)){
-                console.log("Connect 4!")
-                return true
-            }else{
-                return false
-            }
-        }else{
-            return false
+        let winningSet
+
+        if(findHorizontalMatches(indexSort(listSelected))){
+            winningSet = findHorizontalMatches(indexSort(listSelected))
+            console.log("Horizontal Match Found!")
+        }else if(findVerticalMatches(squaresSortX(listSelected))){
+            winningSet = findVerticalMatches(squaresSortX(listSelected))
+            console.log("Vertical Match Found!")
+        }else if(findDiagonalMatches(indexSort(listSelected))){
+            winningSet = findDiagonalMatches(indexSort(listSelected))
+            console.log("Diagonal Match Found!")
         }
+
+        if(winningSet){
+            won = true
+            showWinningSquares(winningSet)
+        }
+        
+        
     }else{
         return
+    }
+    
+}
+
+/* Display the winning Squares */
+function showWinningSquares(winningSet){
+    for (let x = 0; x < winningSet.length; x++){
+        let ctx = canvas.getContext("2d")
+        ctx.beginPath();
+        ctx.rect(winningSet[x].startX, winningSet[x].startY, squareSize, squareSize);
+        ctx.fillStyle = "rgb(255,224,100)";
+        ctx.fill();
     }
 }
 
@@ -532,7 +685,7 @@ function buildBoard(){
     setBoardFloor()
     setBoardWidth();
     setSquareSize();
-    setRowHeights()
+    setColumnHeights()
     makeBoard();
     drawGrid();
     defaultSize = false
